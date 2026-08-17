@@ -25,7 +25,7 @@ export {
   GOOGLE_AI_MODE_PROVIDER_ID,
   resolveGoogleAiModeOptions,
 } from './provider.js'
-export { buildGoogleAiModeUrl, cleanTitle, embedCitations, extractionToDocument, htmlToMarkdown } from './extract.js'
+export { buildGoogleAiModeUrl, cleanTitle, embedCitations, extractionToDocument, htmlToMarkdown, sourcesFromAnswerHtml } from './extract.js'
 export type { GoogleAiModeSearchProviderOptions } from './provider.js'
 export type { GoogleAiModeExtraction, GoogleAiModeRawCitation, GoogleAiModeRawSource, GoogleAiModeSearchDocument, OpenCliRunner } from './types.js'
 

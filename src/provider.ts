@@ -1,7 +1,7 @@
 import { WebError } from '@deepseek-ai/dsh-web'
 import type { WebSearchProvider, WebSearchRequest, WebSearchResult } from '@deepseek-ai/dsh-web'
 import { DEFAULT_OPENCLI_COMMAND, runOpenCliProcess } from './opencli.js'
-import { asGoogleAiModeExtraction, buildGoogleAiModeUrl, EXTRACT_GOOGLE_AI_MODE_JS, extractionToDocument, unwrapOpenCliEval } from './extract.js'
+import { asGoogleAiModeExtraction, buildGoogleAiModeUrl, EXTRACT_GOOGLE_AI_MODE_JS, extractionToDocument, unwrapOpenCliEval, WAIT_FOR_GOOGLE_AI_MODE_JS } from './extract.js'
 import type { OpenCliRunner, OpenCliRunResult } from './types.js'
 
 /** Stable default provider id. */
@@ -114,6 +114,7 @@ export class GoogleAiModeSearchProvider implements WebSearchProvider {
 
   private async waitForCompletion(tab: string, started: number, signal: AbortSignal | undefined): Promise<void> {
     await this.run(['browser', this.options.opencliSession, 'wait', 'selector', '[data-container-id="main-col"]', '--tab', tab, '--timeout', String(this.remainingMs(started))], started, signal, true)
+    await this.evalJson(tab, WAIT_FOR_GOOGLE_AI_MODE_JS, started, signal)
   }
 
   private async evalJson(tab: string, js: string, started: number, signal: AbortSignal | undefined): Promise<unknown> {

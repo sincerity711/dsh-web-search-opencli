@@ -3,7 +3,7 @@ import WebRuntime from '@deepseek-ai/dsh-web'
 import { describe, expect, it, vi } from 'vitest'
 import * as plugin from '../src/index.ts'
 import { GoogleAiModeSearchProvider, GOOGLE_AI_MODE_PROVIDER_ID, resolveGoogleAiModeOptions } from '../src/provider.ts'
-import { buildGoogleAiModeUrl, embedCitations, extractionToDocument, htmlToMarkdown } from '../src/extract.ts'
+import { buildGoogleAiModeUrl, embedCitations, extractionToDocument, htmlToMarkdown, sourcesFromAnswerHtml } from '../src/extract.ts'
 import type { OpenCliRunRequest, OpenCliRunResult } from '../src/types.ts'
 
 function ok(stdout: unknown): OpenCliRunResult {
@@ -54,11 +54,16 @@ Hello **world**
   it('maps an extraction to web_search content and sources', () => {
     expect(extractionToDocument({
       html: '<p>Answer <code>[CITE-0]</code></p>',
-      citations: [{ marker_id: 0, sources: [{ title: 'Source', url: 'https://source.test', source: 'source.test' }] }],
+      citations: [{ marker_id: 0, sources: [{ title: 'Source', url: 'https://source.test/', source: 'source.test' }] }],
     })).toEqual({
       markdown: 'Answer [1]',
-      sources: [{ title: 'Source', url: 'https://source.test' }],
+      sources: [{ title: 'Source', url: 'https://source.test/' }],
     })
+  })
+
+  it('extracts source links embedded directly in the AI Mode answer', () => {
+    expect(sourcesFromAnswerHtml('<p>Answer <a href="/url?sa=i&url=https%3A%2F%2Fgithub.com%2Fdeepseek-ai%2Fdeepseek-harness">GitHub +2</a><a href="https://support.google.com/websearch?p=aimode">Learn more</a></p>'))
+      .toEqual([{ title: 'GitHub +2', url: 'https://github.com/deepseek-ai/deepseek-harness' }])
   })
 })
 
@@ -74,10 +79,11 @@ describe('GoogleAiModeSearchProvider', () => {
       if (command.includes('tab list')) return ok([])
       if (command.includes('tab new')) return ok({ page: 'tab-1' })
       if (command.includes('wait selector')) return ok('')
+      if (js.includes('stable >= 4')) return ok(envelope({ ready: true, length: 100 }))
       if (js.includes('document.body.innerText.slice')) return ok(envelope({ u: 'https://www.google.com/search?udm=50&q=x', sample: 'answer' }))
       if (js.includes('mainCol.innerHTML')) return ok(envelope({
         html: '<p>AI answer <code>[CITE-0]</code></p>',
-        citations: [{ marker_id: 0, sources: [{ title: 'Citation', url: 'https://citation.test', source: 'citation.test' }] }],
+        citations: [{ marker_id: 0, sources: [{ title: 'Citation', url: 'https://citation.test/', source: 'citation.test' }] }],
       }))
       return fail('unexpected command ' + command)
     })
@@ -85,7 +91,7 @@ describe('GoogleAiModeSearchProvider', () => {
 
     await expect(provider.search({ query: 'hello' })).resolves.toEqual({
       content: 'AI answer [1]',
-      sources: [{ title: 'Citation', url: 'https://citation.test' }],
+      sources: [{ title: 'Citation', url: 'https://citation.test/' }],
       truncated: false,
     })
     expect(mutableCalls[1]?.at(-1)).toBe('https://www.google.com/search?udm=50&q=hello')
@@ -98,6 +104,7 @@ describe('GoogleAiModeSearchProvider', () => {
       if (command.includes('tab list')) return ok([])
       if (command.includes('tab new')) return ok({ targetId: 'tab-1' })
       if (command.includes('wait selector')) return ok('')
+      if (js.includes('stable >= 4')) return ok(envelope({ ready: true, length: 100 }))
       if (js.includes('document.body.innerText.slice')) return ok(envelope({ u: 'https://www.google.com/sorry/index', sample: 'unusual traffic' }))
       return ok(envelope({}))
     })
@@ -113,6 +120,7 @@ describe('GoogleAiModeSearchProvider', () => {
       if (command.includes('tab list')) return ok([])
       if (command.includes('tab new')) return ok({ page: 'tab-1' })
       if (command.includes('wait selector')) return ok('')
+      if (js.includes('stable >= 4')) return ok(envelope({ ready: true, length: 100 }))
       if (js.includes('document.body.innerText.slice')) return ok(envelope({ u: 'https://www.google.com/search', sample: 'normal' }))
       return ok(envelope({ error: 'AI_MODE_NOT_AVAILABLE' }))
     })
