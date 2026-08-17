@@ -20,13 +20,7 @@ export const EXTRACT_GOOGLE_AI_MODE_JS = ["(async () => {","  const isVisible = 
 /** Convert the subset of Google AI Mode HTML used in answers to markdown. */
 export function htmlToMarkdown(html: string): string {
   let text = html.replace(/<a([^>]*?)href="([^"]+)"([^>]*)>([\s\S]*?)<\/a>/gi, (_match: string, before: string, href: string, after: string, label: string) => {
-    let real = href
-    try {
-      const url = new URL(href, 'https://www.google.com')
-      real = url.searchParams.get('url') ?? href
-    } catch {
-      real = href
-    }
+    const real = normalizeGoogleHref(href) ?? decodeHtmlEntities(href)
     return '<a' + before + 'href="' + real + '"' + after + '>' + label + '</a>'
   })
   text = text.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '\n# $1\n')
@@ -59,7 +53,14 @@ export function htmlToMarkdown(html: string): string {
     .replace(/\n[ \t]+/g, '\n')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
-  return text.trim()
+  return cleanupMarkdown(text)
+}
+
+function cleanupMarkdown(markdown: string): string {
+  let text = markdown.replace(/sn\._setImageSrc\([^)]*\)/g, '')
+  const footer = text.indexOf('AI responses may include mistakes.')
+  if (footer >= 0) text = text.slice(0, footer)
+  return text.replace(/\n{3,}/g, '\n\n').trim()
 }
 
 /** Remove browser chrome labels from citation titles. */

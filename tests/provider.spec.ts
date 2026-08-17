@@ -62,8 +62,13 @@ Hello **world**
   })
 
   it('extracts source links embedded directly in the AI Mode answer', () => {
-    expect(sourcesFromAnswerHtml('<p>Answer <a href="/url?sa=i&url=https%3A%2F%2Fgithub.com%2Fdeepseek-ai%2Fdeepseek-harness">GitHub +2</a><a href="https://support.google.com/websearch?p=aimode">Learn more</a></p>'))
-      .toEqual([{ title: 'GitHub +2', url: 'https://github.com/deepseek-ai/deepseek-harness' }])
+    expect(sourcesFromAnswerHtml('<p>Answer <a href="/url?sa=i&amp;url=https%3A%2F%2Fgithub.com%2Fdeepseek-ai%2Fdeepseek-harness" aria-label="GitHub source"></a><a href="https://support.google.com/websearch?p=aimode">Learn more</a></p>'))
+      .toEqual([{ title: 'GitHub source', url: 'https://github.com/deepseek-ai/deepseek-harness' }])
+  })
+
+  it('removes Google footer and image script noise from markdown', () => {
+    expect(htmlToMarkdown(`<p>Answer</p>sn._setImageSrc('img','data:image/png;base64,aaa')<p>AI responses may include mistakes. Learn more</p>`))
+      .toBe('Answer')
   })
 })
 
