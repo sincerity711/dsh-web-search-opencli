@@ -1,0 +1,15 @@
+# dsh-web-search-opencli bundle.
+# Installs the Google AI Mode provider and selects it for DSH web_search.
+- id: web
+  config:
+    searchProvider: google-ai-mode
+
+- insert:
+    - id: web-search-opencli
+      name: dsh-web-search-opencli
+      config:
+        providerId: google-ai-mode
+        opencliSession: dsh-google-ai-mode
+        opencliWindow: background
+        timeoutMs: 45000
+        closeTabAfterSearch: false

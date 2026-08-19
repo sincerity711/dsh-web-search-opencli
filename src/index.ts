@@ -43,10 +43,12 @@ export interface Config {
   readonly opencliCommand?: string
   /** OpenCLI browser session name. Defaults to dsh-google-ai-mode. */
   readonly opencliSession?: string
-  /** OPENCLI_WINDOW value. Defaults to background. */
+  /** OpenCLI browser window mode passed via OPENCLI_WINDOW and --window. Defaults to background. */
   readonly opencliWindow?: string
   /** End-to-end timeout in milliseconds. Defaults to 45000. */
   readonly timeoutMs?: number
+  /** Close the OpenCLI tab after each search. Defaults to false to avoid Chrome replacing the last tab with about:blank. */
+  readonly closeTabAfterSearch?: boolean
 }
 
 export const Config: z<Config> = z.object({
@@ -55,6 +57,7 @@ export const Config: z<Config> = z.object({
   opencliSession: z.string().default(DEFAULT_OPENCLI_SESSION),
   opencliWindow: z.string().default(DEFAULT_OPENCLI_WINDOW),
   timeoutMs: z.number().step(1).min(1).default(DEFAULT_TIMEOUT_MS),
+  closeTabAfterSearch: z.boolean().default(false),
 })
 
 /** Register the Google AI Mode search provider into ctx.web. */

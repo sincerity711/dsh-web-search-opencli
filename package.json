@@ -15,7 +15,10 @@
   },
   "files": [
     "lib",
-    "README.md"
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "docs"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -48,5 +51,23 @@
   "bugs": {
     "url": "https://github.com/sincerity711/dsh-web-search-opencli/issues"
   },
-  "homepage": "https://github.com/sincerity711/dsh-web-search-opencli#readme"
+  "homepage": "https://github.com/sincerity711/dsh-web-search-opencli#readme",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "deepseek",
+    "cordis",
+    "web-search",
+    "google-ai-mode",
+    "opencli"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

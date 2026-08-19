@@ -81,8 +81,7 @@ describe('GoogleAiModeSearchProvider', () => {
       const command = request.args.join(' ')
       const js = String(request.args.at(-1))
       expect(request.env.OPENCLI_WINDOW).toBe('background')
-      if (command.includes('tab list')) return ok([])
-      if (command.includes('tab new')) return ok({ page: 'tab-1' })
+      if (command.includes(' open ')) return ok({ page: 'tab-1' })
       if (command.includes('wait selector')) return ok('')
       if (js.includes('stable >= 4')) return ok(envelope({ ready: true, length: 100 }))
       if (js.includes('document.body.innerText.slice')) return ok(envelope({ u: 'https://www.google.com/search?udm=50&q=x', sample: 'answer' }))
@@ -99,15 +98,16 @@ describe('GoogleAiModeSearchProvider', () => {
       sources: [{ title: 'Citation', url: 'https://citation.test/' }],
       truncated: false,
     })
-    expect(mutableCalls[1]?.at(-1)).toBe('https://www.google.com/search?udm=50&q=hello')
+    expect(mutableCalls[0]?.at(-1)).toBe('https://www.google.com/search?udm=50&q=hello')
+    expect(mutableCalls.every(call => call[0] === 'browser' && call[2] === '--window' && call[3] === 'background')).toBe(true)
+    expect(mutableCalls.some(call => call.includes('close'))).toBe(false)
   })
 
   it('maps CAPTCHA to a provider-specific WebError code', async () => {
     const runner = vi.fn(async (request: OpenCliRunRequest): Promise<OpenCliRunResult> => {
       const command = request.args.join(' ')
       const js = String(request.args.at(-1))
-      if (command.includes('tab list')) return ok([])
-      if (command.includes('tab new')) return ok({ targetId: 'tab-1' })
+      if (command.includes(' open ')) return ok({ targetId: 'tab-1' })
       if (command.includes('wait selector')) return ok('')
       if (js.includes('stable >= 4')) return ok(envelope({ ready: true, length: 100 }))
       if (js.includes('document.body.innerText.slice')) return ok(envelope({ u: 'https://www.google.com/sorry/index', sample: 'unusual traffic' }))
@@ -116,14 +116,14 @@ describe('GoogleAiModeSearchProvider', () => {
     const provider = new GoogleAiModeSearchProvider({ ...resolveGoogleAiModeOptions({}), runner })
     await expect(provider.search({ query: 'captcha' }))
       .rejects.toThrow(expect.objectContaining({ code: 'WEB_SEARCH_OPENCLI_CAPTCHA' }))
+    expect(runner.mock.calls.map(([request]) => request.args).some(args => args.includes('close'))).toBe(false)
   })
 
   it('maps AI Mode unavailability to a provider-specific WebError code', async () => {
     const runner = vi.fn(async (request: OpenCliRunRequest): Promise<OpenCliRunResult> => {
       const command = request.args.join(' ')
       const js = String(request.args.at(-1))
-      if (command.includes('tab list')) return ok([])
-      if (command.includes('tab new')) return ok({ page: 'tab-1' })
+      if (command.includes(' open ')) return ok({ page: 'tab-1' })
       if (command.includes('wait selector')) return ok('')
       if (js.includes('stable >= 4')) return ok(envelope({ ready: true, length: 100 }))
       if (js.includes('document.body.innerText.slice')) return ok(envelope({ u: 'https://www.google.com/search', sample: 'normal' }))
